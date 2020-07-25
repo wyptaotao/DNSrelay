@@ -18,5 +18,11 @@
     <ClCompile Include="DNS_relay.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="recv.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="data.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
