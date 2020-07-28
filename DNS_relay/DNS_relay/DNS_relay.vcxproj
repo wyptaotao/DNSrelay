@@ -139,9 +139,15 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\..\..\..\..\Documents\Tencent Files\1091193674\FileRecv\DNS\DNS\DNS\init.cpp" />
+    <ClCompile Include="..\..\..\..\..\..\Documents\Tencent Files\1091193674\FileRecv\DNS\DNS\DNS\main.cpp" />
     <ClCompile Include="DNS_relay.cpp" />
     <ClCompile Include="recv.cpp" />
     <ClCompile Include="data.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\..\..\..\Documents\Tencent Files\1091193674\FileRecv\DNS\DNS\DNS\def.h" />
+    <ClInclude Include="..\..\..\..\..\..\Documents\Tencent Files\1091193674\FileRecv\DNS\DNS\DNS\lib.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -24,5 +24,19 @@
     <ClCompile Include="data.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\..\..\Documents\Tencent Files\1091193674\FileRecv\DNS\DNS\DNS\init.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\..\Documents\Tencent Files\1091193674\FileRecv\DNS\DNS\DNS\main.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\..\..\..\Documents\Tencent Files\1091193674\FileRecv\DNS\DNS\DNS\lib.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\..\Documents\Tencent Files\1091193674\FileRecv\DNS\DNS\DNS\def.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
