@@ -17,11 +17,17 @@ int main()
 	while (1)
 	{
 		//query();
-		
 		char buffer[BUF_SIZE];
 		int nSize = sizeof(SOCKADDR);
-		int strLen = recvfrom(local_sock, buffer, BUF_SIZE, 0, &clntAddr, &nSize);
-		printf("\n$$$$$$$$$$$$$$$  %s  $$$$$$$$$$$$$$\n", buffer);
+		int len = sizeof(buffer);
+
+		int strLen = recvfrom(local_sock, buffer, len, 0, &clntAddr, &nSize);
+		printf("the strLen is : %d\n", strLen);
+		for (int i = 0; i < strLen; i++)
+		{
+			printf("\n@@@@@@@@@ %c @@@@@@@@@@@@@\n", buffer[i]);
+		}
+		printf("\n@@@@     end      @@@@\n");
 		//sendto(local_sock, buffer, strLen, 0, &clntAddr, nSize);
 	}
 	closesocket(local_sock);
