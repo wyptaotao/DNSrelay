@@ -25,7 +25,7 @@ int main()
 		printf("the strLen is : %d\n", strLen);
 		for (int i = 0; i < strLen; i++)
 		{
-			printf("\n@@@@@@@@@ %c @@@@@@@@@@@@@\n", buffer[i]);
+			printf("\n@@@@@@@@@ %c @@@@@@@@@@@@@\n", buffer[i]);//¼Óµã×¢ÊÍ
 		}
 		printf("\n@@@@     end      @@@@\n");
 		//sendto(local_sock, buffer, strLen, 0, &clntAddr, nSize);
