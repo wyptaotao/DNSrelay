@@ -25,9 +25,15 @@ unsigned short Bind_ID(unsigned short ID, SOCKADDR_IN client)/*°ó¶¨Ò»¸öID°ó¶¨µ¥Î
 			ID_Table[i].prev_ID = ID;//°ó¶¨Ô­À´Êı¾İ°üID
 			ID_Table[i].status = 0;//½«×´Ì¬ÉèÖÃÎª»¹Î´Íê³É»Ø´«
 			Set_TTL(TTL, &ID_Table[i]);//ÉèÖÃ³¬Ê±Ê±¼ä
+			if (debug_level == 2) {
+				printf("°ó¶¨ID³É¹¦£¡±àºÅÎª %d \n",i);
+			}
 			return i;
 		}
 	}
-	printf("°ó¶¨IDÊ§°Ü");
+	if (debug_level == 2) {
+		printf("°ó¶¨IDÊ§°Ü\n");
+	}
 	return -1;
 }
+
