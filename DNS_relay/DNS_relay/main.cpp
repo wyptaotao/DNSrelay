@@ -28,7 +28,7 @@ int main()
 			printf("\n@@@@@@@@@ %c @@@@@@@@@@@@@\n", buffer[i]);//¼Óµã×¢ÊÍ
 		}
 		printf("\n@@@@     end      @@@@\n");
-		//sendto(local_sock, buffer, strLen, 0, &clntAddr, nSize);
+		sendto(local_sock, buffer, strLen, 0, &clntAddr, nSize);
 	}
 	closesocket(local_sock);
 	WSACleanup();
