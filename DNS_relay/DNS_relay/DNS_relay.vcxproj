@@ -141,6 +141,7 @@
   <ItemGroup>
     <ClCompile Include="init.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="query.cpp" />
     <ClCompile Include="recv.cpp" />
     <ClCompile Include="data.cpp" />
   </ItemGroup>
