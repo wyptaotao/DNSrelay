@@ -53,5 +53,5 @@ void Transfer_URL(char* buf, char* dest)
 			k++;
 		}//将计数位赋值为"."
 	}
-	dest[k] = '\0'; /* Set the end */
+	dest[k] = '\0'; //结尾
 }//将数据包中域名的格式转为正常的点分字符串
