@@ -10,3 +10,5 @@ typedef struct {
 }ID_Binding_Unit;//记录对应ID的结构体
 
 ID_Binding_Unit ID_Table[MAX_ID_TABLE_SIZE];//ID对应绑定表
+
+void Transfer_URL(char* buf, char* dest);//转换域名至可查询格式

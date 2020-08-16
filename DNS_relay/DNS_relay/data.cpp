@@ -37,3 +37,21 @@ unsigned short Bind_ID(unsigned short ID, SOCKADDR_IN client)/*°ó¶¨Ò»¸öID°ó¶¨µ¥Î
 	return -1;
 }
 
+void Transfer_URL(char* buf, char* dest)
+{
+	int i = 0, j = 0, k = 0, len = strlen(buf);
+	while (i < len)
+	{
+		if (buf[i] > 0 && buf[i] <= 63)//¼ÆÊýÎ»
+		{
+			for (j = buf[i], i++; j > 0; j--, i++, k++) 
+				dest[k] = buf[i];//ÖðÎ»¸´ÖÆ
+		}
+		if (buf[i] != 0) 
+		{
+			dest[k] = '.';
+			k++;
+		}//½«¼ÆÊýÎ»¸³ÖµÎª"."
+	}
+	dest[k] = '\0'; /* Set the end */
+}//½«Êý¾Ý°üÖÐÓòÃûµÄ¸ñÊ½×ªÎªÕý³£µÄµã·Ö×Ö·û´®
