@@ -32,13 +32,11 @@ void init_sock()
     //SOCKET extern_sock = socket(AF_INET, SOCK_DGRAM, 0);
 
     //绑定套接字
-   
-    memset(&localAddr, 0, sizeof(localAddr));  //每个字节都用0填充
-    localAddr.sin_family = AF_INET;  //使用IPv4地址
+    memset(&localAddr, 0, sizeof(localAddr));   //每个字节都用0填充
+    localAddr.sin_family = AF_INET;             //使用IPv4地址
     localAddr.sin_addr.s_addr = htonl(INADDR_ANY); //自动获取IP地址,在这种情况下，可以收到发送到本机（服务器端）所有有效地址上数据包。
-    localAddr.sin_port = htons(53);  //端口
+    localAddr.sin_port = htons(53);                //UDP端口
 
-  
     if (bind(local_sock, (SOCKADDR*)&localAddr, sizeof(SOCKADDR)) == 0)//bind()函数通过给一个未命名套接口分配一个本地名字来为套接口建立本地捆绑（主机地址/端口号）。
     {
         printf("bind socket port successfully.");
