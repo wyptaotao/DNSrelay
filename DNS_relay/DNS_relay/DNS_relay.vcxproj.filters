@@ -30,9 +30,6 @@
     <ClCompile Include="query.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="switch.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="def.h">

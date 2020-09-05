@@ -144,7 +144,6 @@
     <ClCompile Include="query.cpp" />
     <ClCompile Include="recv.cpp" />
     <ClCompile Include="data.cpp" />
-    <ClCompile Include="switch.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="def.h" />
