@@ -139,6 +139,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\..\..\..\..\Desktop\DNS\DNS\程泽楷.cpp" />
     <ClCompile Include="init.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="query.cpp" />
@@ -146,6 +147,7 @@
     <ClCompile Include="data.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\..\..\..\..\Desktop\DNS\DNS\head.h" />
     <ClInclude Include="def.h" />
     <ClInclude Include="init.h" />
     <ClInclude Include="data.h" />
