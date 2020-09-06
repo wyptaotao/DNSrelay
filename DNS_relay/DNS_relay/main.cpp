@@ -1,7 +1,9 @@
 #include <stdio.h>
 #include <winsock2.h>
+#include "data.h"
 #include "init.h"
 #include "def.h"
+#include"recv.h"
 #pragma comment (lib, "ws2_32.lib")  //╪сть ws2_32.dll
 char ip[2000][25];
 char dn[2000][100];//domain name
@@ -18,7 +20,20 @@ int main()
 	while (1)
 	{
 		//query();
-
+		for (int i = 0; i < MAX_ID_TABLE_SIZE; i++)//initiate the ID_TRANS_TABLE
+		{
+			ID_Table[i].prev_ID = 0;
+			ID_Table[i].status = TRUE;
+			ID_Table[i].dead_time = 0;
+			memset(&(ID_Table[i].client), 0, sizeof(SOCKADDR_IN));
+		}
+		printf("1\n");
+		switch_pack();
+		printf("5\n");
+		char buffer[BUF_SIZE];
+		int nSize = sizeof(SOCKADDR);
+		int strLen = recvfrom(local_sock, buffer, BUF_SIZE, 0, &clntAddr, &nSize);
+		printf("\n$$$$$$$$$$$$$$$  %s  $$$$$$$$$$$$$$\n", buffer);
 		//sendto(local_sock, buffer, strLen, 0, &clntAddr, nSize);
 	}
 	closesocket(local_sock);

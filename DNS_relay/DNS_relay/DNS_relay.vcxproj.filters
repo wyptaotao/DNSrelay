@@ -41,7 +41,7 @@
     <ClInclude Include="init.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="head.h">
+    <ClInclude Include="recv.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

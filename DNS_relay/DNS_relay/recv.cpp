@@ -1,8 +1,9 @@
 #include <stdio.h>
 #include <winsock2.h>
-#include "lib.h"
+#include "head.h"
 #include "def.h"
 #include "head.h"
+#include "data.h"
 #pragma comment (lib, "ws2_32.lib")  //加载 ws2_32.dll
 #pragma warning(disable:4996)
 char ip[2000][20];
@@ -20,43 +21,43 @@ void color(short x)	//自定义函根据参数改变颜色
 		SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 7);
 }
 
-void Set_ID_Expire(ID_Trans_Unit* record, int ttl)
-{
-	record->expire_time = time(NULL) + ttl;   /* expire_time = time now + time to live */
-}
-
-/* Check whether the record is expired */
-int Get_ID_Expired(ID_Trans_Unit* record)
-{
-	return record->expire_time > 0 && time(NULL) > record->expire_time;
-}
-
-/* Register new ID into ID_Trans_Table */
-unsigned short Register_New_ID(unsigned short ID, SOCKADDR_IN temp, BOOL if_done)
-{
-	int i = 0;
-	for (i = 0; i != ID_TRANS_TABLE_SIZE; ++i)
-	{
-		/* Find out overdue record or a record which was analysed completely */
-		if (Get_ID_Expired(&ID_Trans_Table[i]) == 1 || ID_Trans_Table[i].done == TRUE)
-		{
-			ID_Trans_Table[i].old_ID = ID;     /* Set ID */
-			ID_Trans_Table[i].client = temp;   /* socket_addr */
-			ID_Trans_Table[i].done = if_done;  /* Mark whether analysis completed */
-			Set_ID_Expire(&ID_Trans_Table[i], ID_EXPIRE_TIME);
-			ID_Count++;
-			if (debug_level)
-			{
-				printf("New ID : %d recorded and registered successfully\n", i + 1);
-				printf("ID number : %d\n", ID_Count);
-			}
-			break;
-		}
-	}
-	if (i == ID_TRANS_TABLE_SIZE) /* Register failed */
-		return 0;
-	return (unsigned short)i + 1; /* Return new ID */
-}
+//void Set_ID_Expire(ID_Trans_Unit* record, int ttl)
+//{
+//	record->expire_time = time(NULL) + ttl;   /* expire_time = time now + time to live */
+//}
+//
+///* Check whether the record is expired */
+//int Get_ID_Expired(ID_Trans_Unit* record)
+//{
+//	return record->expire_time > 0 && time(NULL) > record->expire_time;
+//}
+//
+///* Register new ID into ID_Trans_Table */
+//unsigned short Register_New_ID(unsigned short ID, SOCKADDR_IN temp, BOOL if_done)
+//{
+//	int i = 0;
+//	for (i = 0; i != MAX_ID_TABLE_SIZE; ++i)
+//	{
+//		/* Find out overdue record or a record which was analysed completely */
+//		if (Get_ID_Expired(&ID_Trans_Table[i]) == 1 || ID_Trans_Table[i].done == TRUE)
+//		{
+//			ID_Trans_Table[i].old_ID = ID;     /* Set ID */
+//			ID_Trans_Table[i].client = temp;   /* socket_addr */
+//			ID_Trans_Table[i].done = if_done;  /* Mark whether analysis completed */
+//			If_Expired(&ID_Trans_Table[i]);
+//			ID_Count++;
+//			if (debug_level)
+//			{
+//				printf("New ID : %d recorded and registered successfully\n", i + 1);
+//				printf("ID number : %d\n", ID_Count);
+//			}
+//			break;
+//		}
+//	}
+//	if (i == ID_TRANS_TABLE_SIZE) /* Register failed */
+//		return 0;
+//	return (unsigned short)i + 1; /* Return new ID */
+//}
 
 void Process_Parameters(int argc, char* argv[])
 {
@@ -79,25 +80,6 @@ void Process_Parameters(int argc, char* argv[])
 	printf("Debug level : %d\n", debug_level);
 }
 
-void Convert_to_Url(char* buf, char* dest)
-{
-	int i = 0, j = 0, k = 0, len = strlen(buf);
-	while (i < len)
-	{
-		if (buf[i] > 0 && buf[i] <= 63) /* Count */
-		{
-			for (j = buf[i], i++; j > 0; j--, i++, k++) /* Copy the url */
-				dest[k] = buf[i];
-		}
-		if (buf[i] != 0) /* If this is not the end, put a dot into dest */
-		{
-			dest[k] = '.';
-			k++;
-		}
-	}
-	dest[k] = '\0'; /* Set the end */
-}
-
 void switch_pack() {
 	char buf[BUF_SIZE];
 	char url[65];
@@ -107,8 +89,8 @@ void switch_pack() {
 	packlen = recvfrom(local_sock, buf, sizeof buf, 0, (struct sockaddr*)&localAddr, &length_addr);/* Receive packet from client */
 	char ori_url[165];
 	if (packlen > 0) {
-		memcpy(ori_url, &(buf[DNS_HEAD_SIZE]), packlen); /* Get original url from buf */
-		Convert_to_Url(ori_url, url); /* Convert original url to url */
+		memcpy(ori_url, &(buf[DNS_HEARDER_SIZE]), packlen);//获取url
+		Transfer_URL(ori_url, url);//转换为正常url字符串
 		if (debug_level)
 		{
 			printf("\n\nReceive from client [IP:%s]\n", inet_ntoa(client.sin_addr));
@@ -128,8 +110,8 @@ void switch_pack() {
 
 		printf("[Url : %s] not in local data and cache\n", url);
 		unsigned short* pID = (unsigned short*)malloc(sizeof(unsigned short));
-		memcpy(pID, buf, sizeof(unsigned short)); /* Record ID */
-		unsigned short nID = Register_New_ID(*pID, client, FALSE); /* Register in the ID transfer table */
+		memcpy(pID, buf, sizeof(unsigned short));//记录下当前包id
+		unsigned short nID = Bind_ID(*pID, client);//绑定转发查询
 		if (nID == 0)
 		{
 			if (debug_level >= 1)
@@ -138,7 +120,7 @@ void switch_pack() {
 		else
 		{
 			memcpy(buf, &nID, sizeof(unsigned short));
-			packlen = sendto(extern_sock, buf, packlen, 0, (struct sockaddr*)&extern_id, sizeof(extern_id));/* Send the request to external DNS server */
+			packlen = sendto(extern_sock, buf, packlen, 0, (struct sockaddr*)&extern_id, sizeof(extern_id));//发送给本地DNS服务器
 			if (debug_level >= 1)
 				printf("Send to external DNS server [Url : ");
 			color(2);
@@ -148,35 +130,4 @@ void switch_pack() {
 		}
 		free(pID);
 	}
-}
-
-int main()
-{
-	init_sock();
-	init_data();
-	while (1)
-	{
-		//query();
-		for (int i = 0; i < ID_TRANS_TABLE_SIZE; i++)//initiate the ID_TRANS_TABLE
-		{
-			ID_Trans_Table[i].old_ID = 0;
-			ID_Trans_Table[i].done = TRUE;
-			ID_Trans_Table[i].expire_time = 0;
-			memset(&(ID_Trans_Table[i].client), 0, sizeof(SOCKADDR_IN));
-		}
-
-		extern_id.sin_family = AF_INET;                         // Set the family as TCP/IP 
-		extern_id.sin_addr.s_addr = inet_addr(DNS_Server_IP);   // Set to the IP of extern DNS server 
-		extern_id.sin_port = htons(DNS_PORT);                   // Set the port as DNS port (53) 
-		printf("1\n");
-		switch_pack();
-		printf("5\n");
-		char buffer[BUF_SIZE];
-		int nSize = sizeof(SOCKADDR);
-		int strLen = recvfrom(local_sock, buffer, BUF_SIZE, 0, &clntAddr, &nSize);
-		printf("\n$$$$$$$$$$$$$$$  %s  $$$$$$$$$$$$$$\n", buffer);
-		//sendto(local_sock, buffer, strLen, 0, &clntAddr, nSize);
-	}
-	closesocket(local_sock);
-	WSACleanup();
 }

@@ -7,12 +7,6 @@
 using namespace std;
 #pragma warning(disable:4996)
 
-#define MAX_BUF_SIZE 1024          /* Max buffer size */
-#define DNS_PORT 53                /* DNS port */
-#define ID_TRANS_TABLE_SIZE 16 /* MAX size of transfer table */
-#define ID_EXPIRE_TIME 10          /* Expired time is 10s*/
-#define MAX_CACHE_SIZE 5           /* Max size of cache */
-#define DNS_HEAD_SIZE 12
 
 /* Unit of ID transfer table */
 typedef struct

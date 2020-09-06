@@ -40,7 +40,7 @@ unsigned short Bind_ID(unsigned short ID, SOCKADDR_IN client)/*°ó¶¨Ò»¸öID°ó¶¨µ¥Î
 void Transfer_URL(char* buf, char* dest)
 {
 	int i = 0, j = 0, k = 0, len = strlen(buf);
-	while (i < len)
+	while (i < len) 
 	{
 		if (buf[i] > 0 && buf[i] <= 63)//¼ÆÊýÎ»
 		{
