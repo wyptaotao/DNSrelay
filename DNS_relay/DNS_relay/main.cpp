@@ -13,6 +13,7 @@ SOCKADDR clntAddr;
 int count = 0;			//记录本地记录条数
 int debug_level;
 char true_dns_server_ip[25];//真正的dns服务器的ip
+AllRecords r;
 int main()
 {
 	init_sock();
@@ -30,9 +31,9 @@ int main()
 		printf("1\n");
 		switch_pack();
 		printf("5\n");
-		char buffer[BUF_SIZE];
+		char buffer[MAX_BUF_SIZE];
 		int nSize = sizeof(SOCKADDR);
-		int strLen = recvfrom(local_sock, buffer, BUF_SIZE, 0, &clntAddr, &nSize);
+		int strLen = recvfrom(local_sock, buffer, MAX_BUF_SIZE, 0, &clntAddr, &nSize);
 		printf("\n$$$$$$$$$$$$$$$  %s  $$$$$$$$$$$$$$\n", buffer);
 		//sendto(local_sock, buffer, strLen, 0, &clntAddr, nSize);
 	}
