@@ -2,7 +2,6 @@
 #include <winsock2.h>
 #include "head.h"
 #include "def.h"
-#include "head.h"
 #include "data.h"
 #pragma comment (lib, "ws2_32.lib")  //╪сть ws2_32.dll
 #pragma warning(disable:4996)
