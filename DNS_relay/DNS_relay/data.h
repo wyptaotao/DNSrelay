@@ -11,6 +11,7 @@ typedef struct {
 
 ID_Binding_Unit ID_Table[MAX_ID_TABLE_SIZE];//ID对应绑定表
 
+
 void Transfer_URL(char* buf, char* dest);//转换域名至可查询格式
 int If_Expired(ID_Binding_Unit a);//查询转发查询是否超时
 void Set_TTL(int ttl, ID_Binding_Unit* a);//设置转发查询生存时间
