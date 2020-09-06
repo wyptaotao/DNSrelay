@@ -4,7 +4,7 @@
 
 void query()
 {
-	char buffer[BUF_SIZE] = { 0 };
+	char buffer[MAX_BUF_SIZE] = { 0 };
 	int nSize = sizeof(SOCKADDR);
 	int strLen = recvfrom(local_sock, buffer, sizeof(buffer), 0, &clntAddr, &nSize);
 

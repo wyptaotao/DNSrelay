@@ -55,3 +55,29 @@ void Transfer_URL(char* buf, char* dest)
 	}
 	dest[k] = '\0'; //结尾
 }//将数据包中域名的格式转为正常的点分字符串
+void Clean_cache(Cache_Unit* a) {
+	strcpy(a->inf.dn, "nothing");
+	strcpy(a->inf.ip, "nothing");//将内容赋为空
+}
+int Add_To_Cache(Record a) {
+	int i;
+	for (i = 0; i < MAX_CACHE_SIZE; i++) {
+		if (Cache[i].ttl == 0) {
+			strcpy(Cache[i].inf.dn, a.dn);
+			strcpy(Cache[i].inf.ip, a.ip);
+			Cache[i].ttl = TTL;//把对应单元生存期赋值为TTL
+		}
+		return 1;
+	}
+	return 0;
+}//将一次查询结果放入cache，返回值代表是否成功，1为成功，0为失败
+void LFU_Refresh() {
+	for (int i = 0; i < MAX_CACHE_SIZE; i++) {
+		if (Cache[i].ttl != 0) {
+			Cache[i].ttl--;//减一次计数
+			if (Cache[i].ttl == 0)/*减到0*/ {
+				Clean_cache(&Cache[i]);//清空该单元
+			}
+		}//只更新非空单元
+	}
+}//LFU算法更新缓存

@@ -5,8 +5,6 @@
 #include "def.h"
 #include"recv.h"
 #pragma comment (lib, "ws2_32.lib")  //╪сть ws2_32.dll
-char ip[2000][25];
-char dn[2000][100];//domain name
 SOCKET local_sock;
 sockaddr_in localAddr;
 SOCKADDR clntAddr;

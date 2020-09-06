@@ -22,6 +22,10 @@ struct AllRecords
 	int count;
 };
 
+struct Cache_Unit {
+	Record inf;
+	int ttl;//生存次数
+};//缓存单元
 
 extern int debug_level;
 extern SOCKET local_sock;

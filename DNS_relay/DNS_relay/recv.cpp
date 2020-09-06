@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <winsock2.h>
-#include "head.h"
+#include <time.h>
 #include "def.h"
 #include "data.h"
 #pragma comment (lib, "ws2_32.lib")  //╪сть ws2_32.dll
@@ -80,7 +80,7 @@ void Process_Parameters(int argc, char* argv[])
 }
 
 void switch_pack() {
-	char buf[BUF_SIZE];
+	char buf[MAX_BUF_SIZE];
 	char url[65];
 	memset(buf, 0, sizeof(buf));
 	int packlen = 0;
