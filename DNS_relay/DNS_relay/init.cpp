@@ -1,11 +1,13 @@
 #include <stdio.h>
 #include <winsock2.h>
+#include "def.h"
 #pragma comment (lib, "ws2_32.lib")  //加载 ws2_32.dll
 #define BUF_SIZE 100
 extern char ip[2000][20];
 extern char dn[2000][100];//domain name
 extern SOCKET local_sock;
 extern sockaddr_in localAddr;
+extern AllRecords r;
 //extern SOCKADDR clntAddr;
 extern int count;
 void pre_print()
@@ -53,19 +55,19 @@ int init_data()
     int i = 0;
     FILE* fp; // 文件指针
     errno_t err;
-    err = fopen_s(&fp,"dnsrelay.txt", "r"); // 打开文件
+    err = fopen_s(&fp, "dnsrelay.txt", "r"); // 打开文件
     if (err != 0)
     {
         printf("The file hasn't been opened.");
         exit(1);
     }
     while (!feof(fp)) {
-        fscanf_s(fp, "%s %s", ip[i], _countof(ip[i]),dn[i],_countof(dn[i]));
-        printf("ip:%s domain name:%s\n",ip[i],dn[i]);
+        fscanf_s(fp, "%s %s", r.record[i].ip, _countof(r.record[i].ip), r.record[i].dn, _countof(r.record[i].dn));
+        printf("ip:%s domain name:%s\n", r.record[i].ip, r.record[i].dn);
         i++;
     }
-    count = i;
-    printf("total record number:%d\n", count);
+    r.count = i;
+    printf("total record number:%d\n", r.count);
     fclose(fp); // 关闭文件指针
 }
 
