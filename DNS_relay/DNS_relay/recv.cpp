@@ -5,12 +5,20 @@
 #include "data.h"
 #pragma comment (lib, "ws2_32.lib")  //加载 ws2_32.dll
 #pragma warning(disable:4996)
-char ip[2000][20];
-char dn[2000][100];//domain name
-struct sockaddr_in localAddr;
+extern char ip[2000][20];
+extern char dn[2000][100];//domain name
+extern int count;//记录本地记录条数
+
+extern sockaddr_in localAddr;
+extern SOCKET local_sock;
+extern SOCKET extern_sock;
+extern sockaddr_in extern_id;//AF_INET地址
+extern sockaddr_in client, external;
+extern SOCKADDR clntAddr;
+extern char DNS_Server_IP[16];
+extern int debug_level;
+
 int length_addr = sizeof(localAddr);
-SOCKADDR clntAddr;
-int count = 0;//记录本地记录条数
 
 void color(short x)	//自定义函根据参数改变颜色 
 {

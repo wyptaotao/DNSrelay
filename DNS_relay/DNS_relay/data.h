@@ -10,8 +10,6 @@ typedef struct {
 	int dead_time;//此次绑定的失效时间
 }ID_Binding_Unit;//记录对应ID的结构体
 
-ID_Binding_Unit ID_Table[MAX_ID_TABLE_SIZE];//ID对应绑定表
-Cache_Unit Cache[MAX_CACHE_SIZE];//缓存表
 
 
 void Transfer_URL(char* buf, char* dest);//转换域名至可查询格式

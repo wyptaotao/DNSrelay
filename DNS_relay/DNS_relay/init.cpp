@@ -30,7 +30,7 @@ void init_sock()
     WSAStartup(MAKEWORD(2, 2), &wsaData);
 
     //创建套接字
-     local_sock = socket(AF_INET, SOCK_DGRAM, 0);
+    local_sock = socket(AF_INET, SOCK_DGRAM, 0);
     //SOCKET extern_sock = socket(AF_INET, SOCK_DGRAM, 0);
 
     //绑定套接字

@@ -6,12 +6,21 @@
 #include"recv.h"
 #pragma comment (lib, "ws2_32.lib")  //加载 ws2_32.dll
 SOCKET local_sock;
+SOCKET extern_sock;
 sockaddr_in localAddr;
 SOCKADDR clntAddr;
+sockaddr_in extern_id;//AF_INET地址
+sockaddr_in client, external;
+
 int count = 0;			//记录本地记录条数
 int debug_level;
-char true_dns_server_ip[25];//真正的dns服务器的ip
+
+char DNS_Server_IP[16] = "10.3.9.4";//真正的DNS服务器IP
 AllRecords r;
+
+ID_Binding_Unit ID_Table[MAX_ID_TABLE_SIZE];//ID对应绑定表
+Cache_Unit Cache[MAX_CACHE_SIZE];//缓存表
+
 int main()
 {
 	init_sock();

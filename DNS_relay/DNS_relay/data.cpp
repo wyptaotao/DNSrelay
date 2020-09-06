@@ -5,11 +5,17 @@
 #include"def.h"
 #include"data.h"
 
-void Set_TTL(int ttl,ID_Binding_Unit* a)/*Îª°ó¶¨µ¥Î»ÉèÖÃ³¬Ê±Ê±¼ä*/ {
+extern int  debug_level;
+extern ID_Binding_Unit ID_Table[MAX_ID_TABLE_SIZE];//ID¶ÔÓ¦°ó¶¨±í
+extern Cache_Unit Cache[MAX_CACHE_SIZE];//»º´æ±í
+
+void Set_TTL(int ttl, ID_Binding_Unit* a)/*Îª°ó¶¨µ¥Î»ÉèÖÃ³¬Ê±Ê±¼ä*/
+{
 	a->dead_time = time(NULL) + ttl;//ÉèÖÃ³¬Ê±Ê±¼äÎªµ±Ç°Ê±¼ä¼ÓÉÏÉú´æÆÚ
 }
 
-int If_Expired(ID_Binding_Unit a)/*¼ì²éµ±Ç°°ó¶¨µ¥Î»ÊÇ·ñ³¬¹ý¹æ¶¨Ê±¼ä*/ {
+int If_Expired(ID_Binding_Unit a)/*¼ì²éµ±Ç°°ó¶¨µ¥Î»ÊÇ·ñ³¬¹ý¹æ¶¨Ê±¼ä*/
+{
 	if (time(NULL) >= a.dead_time) {
 		return 1;//·µ»Ø1´ú±íÒÑ¾­³¬Ê±
 	}
@@ -20,13 +26,13 @@ int If_Expired(ID_Binding_Unit a)/*¼ì²éµ±Ç°°ó¶¨µ¥Î»ÊÇ·ñ³¬¹ý¹æ¶¨Ê±¼ä*/ {
 
 unsigned short Bind_ID(unsigned short ID, SOCKADDR_IN client)/*°ó¶¨Ò»¸öID°ó¶¨µ¥Î»£¬·µ»Ø¶ÔÓ¦µÄID*/ {
 	for (int i = 0; i < MAX_ID_TABLE_SIZE; i++) {
-		if (ID_Table[i].status == 1||If_Expired(ID_Table[i]))/*¸ÃÌõ°ó¶¨µ¥Î»ÒÑ¾­»Ø´«Íê±Ï£¬Ä¿Ç°´¦ÓÚ¿ÕÏÐ×´Ì¬»òÕßÒÑ¾­³¬Ê±*/ {
+		if (ID_Table[i].status == 1 || If_Expired(ID_Table[i]))/*¸ÃÌõ°ó¶¨µ¥Î»ÒÑ¾­»Ø´«Íê±Ï£¬Ä¿Ç°´¦ÓÚ¿ÕÏÐ×´Ì¬»òÕßÒÑ¾­³¬Ê±*/ {
 			ID_Table[i].client = client;//°ó¶¨¿Í»§¶ËµØÖ·
 			ID_Table[i].prev_ID = ID;//°ó¶¨Ô­À´Êý¾Ý°üID
 			ID_Table[i].status = 0;//½«×´Ì¬ÉèÖÃÎª»¹Î´Íê³É»Ø´«
 			Set_TTL(TTL, &ID_Table[i]);//ÉèÖÃ³¬Ê±Ê±¼ä
 			if (debug_level == 2) {
-				printf("°ó¶¨ID³É¹¦£¡±àºÅÎª %d \n",i);
+				printf("°ó¶¨ID³É¹¦£¡±àºÅÎª %d \n", i);
 			}
 			return i;
 		}
@@ -40,14 +46,14 @@ unsigned short Bind_ID(unsigned short ID, SOCKADDR_IN client)/*°ó¶¨Ò»¸öID°ó¶¨µ¥Î
 void Transfer_URL(char* buf, char* dest)
 {
 	int i = 0, j = 0, k = 0, len = strlen(buf);
-	while (i < len) 
+	while (i < len)
 	{
 		if (buf[i] > 0 && buf[i] <= 63)//¼ÆÊýÎ»
 		{
-			for (j = buf[i], i++; j > 0; j--, i++, k++) 
+			for (j = buf[i], i++; j > 0; j--, i++, k++)
 				dest[k] = buf[i];//ÖðÎ»¸´ÖÆ
 		}
-		if (buf[i] != 0) 
+		if (buf[i] != 0)
 		{
 			dest[k] = '.';
 			k++;
@@ -55,22 +61,25 @@ void Transfer_URL(char* buf, char* dest)
 	}
 	dest[k] = '\0'; //½áÎ²
 }//½«Êý¾Ý°üÖÐÓòÃûµÄ¸ñÊ½×ªÎªÕý³£µÄµã·Ö×Ö·û´®
+
 void Clean_cache(Cache_Unit* a) {
-	strcpy(a->inf.dn, "nothing");
-	strcpy(a->inf.ip, "nothing");//½«ÄÚÈÝ¸³Îª¿Õ
+	strcpy_s(a->inf.dn, "nothing");
+	strcpy_s(a->inf.ip, "nothing");//½«ÄÚÈÝ¸³Îª¿Õ
 }
+
 int Add_To_Cache(Record a) {
 	int i;
 	for (i = 0; i < MAX_CACHE_SIZE; i++) {
 		if (Cache[i].ttl == 0) {
-			strcpy(Cache[i].inf.dn, a.dn);
-			strcpy(Cache[i].inf.ip, a.ip);
+			strcpy_s(Cache[i].inf.dn, a.dn);
+			strcpy_s(Cache[i].inf.ip, a.ip);
 			Cache[i].ttl = TTL;//°Ñ¶ÔÓ¦µ¥ÔªÉú´æÆÚ¸³ÖµÎªTTL
 		}
 		return 1;
 	}
 	return 0;
 }//½«Ò»´Î²éÑ¯½á¹û·ÅÈëcache£¬·µ»ØÖµ´ú±íÊÇ·ñ³É¹¦£¬1Îª³É¹¦£¬0ÎªÊ§°Ü
+
 void LFU_Refresh() {
 	for (int i = 0; i < MAX_CACHE_SIZE; i++) {
 		if (Cache[i].ttl != 0) {
