@@ -15,22 +15,23 @@ extern sockaddr_in localAddr;
 extern int count;
 extern AllRecords r;
 
+char buffer[MAX_BUF_SIZE] = { 0 };
+int nSize = sizeof(SOCKADDR);
+int length;
+char sendbuf[MAX_BUF_SIZE];
 int query()
 {
-	char buffer[MAX_BUF_SIZE] = { 0 };
-	int nSize = sizeof(SOCKADDR);
-	int length = recvfrom(local_sock, buffer, sizeof(buffer), 0, (struct sockaddr*)&localAddr, &nSize);
-
+	
 	//printf("the strLen is : %d\n", length);
 	//for (int i = 0; i < length; i++)
 	//{
 	//	printf("@@@@@@@@@ %c @@@@@@@@@@@@@\n", buffer[i]);//加点注释
 	//}
 	//printf("\n@@@@     end      @@@@\n");
-
+	length = recvfrom(local_sock, buffer, sizeof(buffer), 0, (struct sockaddr*)&localAddr, &nSize);
 	char url[512] = { 0 };
 	char ori_url[512] = { 0 };		 /* Original url */
-	memcpy(ori_url, &(buffer[DNS_HEADER_SIZE]), length); /* Get original url from packet */
+	memcpy(ori_url, &(buffer[DNS_HEARDER_SIZE]), length); /* Get original url from packet */
 	Transfer_URL(ori_url, url);		 /* Convert original url to normal url */
 	if (debug_level)
 	{
@@ -45,69 +46,68 @@ int query()
 	}
 
 	//先在cache里找
-	/*还没写*/
+	for (int i = 0; i < MAX_CACHE_SIZE; i++) {
+		if (strcmp(url, Cache[i].inf.dn))/*匹配cache里的域名*/ {
+			send_to_client(Cache[i].inf);
+			Cache[i].ttl = TTL + 1;
+			LFU_Refresh();//刷新cache
+		}
+	}
 
 	for (int i = 0; i < r.count; i++)
 	{
 		if (strcmp(url, r.record[i].dn) == 0)//找到,回送给本地
 		{
-
-			char sendbuf[MAX_BUF_SIZE];
-			memcpy(sendbuf, buffer, length); /* Copy the request packet */
-			unsigned short a = htons(0x8180);
-			memcpy(&sendbuf[2], &a, sizeof(unsigned short)); /* Set the flags of Head */
-
-
-		//if (strcmp(r.record[i].ip, "0.0.0.0") == 0)//为无效域名
-		//{
-		//	
-
-			if (r.record[i].ip == "0.0.0.0")    /* Judge if the Url should be shielded */
-				a = htons(0x0000);	/* Shielding function : set the number of answer to 0 */
-			else a = htons(0x0001);	/* Server function : set the number of answer to 1 */
-			memcpy(&sendbuf[6], &a, sizeof(unsigned short));
-
-			int curLen = 0;
-			char answer[16];
-			unsigned short Name = htons(0xc00c);  /* Pointer of domain */
-			memcpy(answer, &Name, sizeof(unsigned short));
-			curLen += sizeof(unsigned short);
-
-			unsigned short TypeA = htons(0x0001);  /* Type */
-			memcpy(answer + curLen, &TypeA, sizeof(unsigned short));
-			curLen += sizeof(unsigned short);
-
-			unsigned short ClassA = htons(0x0001);  /* Class */
-			memcpy(answer + curLen, &ClassA, sizeof(unsigned short));
-			curLen += sizeof(unsigned short);
-
-			unsigned long timeLive = htonl(0x7b); /* Time to live */
-			memcpy(answer + curLen, &timeLive, sizeof(unsigned long));
-			curLen += sizeof(unsigned long);
-
-			unsigned short IPLen = htons(0x0004);  /* Data length */
-			memcpy(answer + curLen, &IPLen, sizeof(unsigned short));
-			curLen += sizeof(unsigned short);
-
-			unsigned long IP;
-			inet_pton(AF_INET, r.record[i].ip, &IP); /* Actually data is IP */
-			//转换由strptr指针所指的字符串，并通过addrptr指针存放二进制结果。
-			//若成功则返回1, 否则如果对所指定的family而言输入的字符串不是有效的表达式，那么值为0。
-			memcpy(answer + curLen, &IP, sizeof(unsigned long));
-			curLen += sizeof(unsigned long);
-			curLen += length;
-			memcpy(sendbuf + length, answer, sizeof(answer));
-
-			length = sendto(local_sock, sendbuf, curLen, 0, (SOCKADDR*)&localAddr, sizeof(localAddr)); /* Send the packet to client */
+			send_to_client(r.record[i]);
+			Add_To_Cache(r.record[i]);//加入缓存
 		}
-
-
 	}
 
 	return 0;
 }
+int send_to_client(Record record) {
+	char sendbuf[MAX_BUF_SIZE];
+	memcpy(sendbuf, buffer, length); /* Copy the request packet */
+	unsigned short a = htons(0x8180);
+	memcpy(&sendbuf[2], &a, sizeof(unsigned short)); /* Set the flags of Head */
+	if (record.ip == "0.0.0.0")    /* Judge if the Url should be shielded */
+		a = htons(0x0000);	/* Shielding function : set the number of answer to 0 */
+	else a = htons(0x0001);	/* Server function : set the number of answer to 1 */
+	memcpy(&sendbuf[6], &a, sizeof(unsigned short));
 
+	int curLen = 0;
+	char answer[16];
+	unsigned short Name = htons(0xc00c);  /* Pointer of domain */
+	memcpy(answer, &Name, sizeof(unsigned short));
+	curLen += sizeof(unsigned short);
 
+	unsigned short TypeA = htons(0x0001);  /* Type */
+	memcpy(answer + curLen, &TypeA, sizeof(unsigned short));
+	curLen += sizeof(unsigned short);
+
+	unsigned short ClassA = htons(0x0001);  /* Class */
+	memcpy(answer + curLen, &ClassA, sizeof(unsigned short));
+	curLen += sizeof(unsigned short);
+
+	unsigned long timeLive = htonl(0x7b); /* Time to live */
+	memcpy(answer + curLen, &timeLive, sizeof(unsigned long));
+	curLen += sizeof(unsigned long);
+
+	unsigned short IPLen = htons(0x0004);  /* Data length */
+	memcpy(answer + curLen, &IPLen, sizeof(unsigned short));
+	curLen += sizeof(unsigned short);
+
+	unsigned long IP;
+	inet_pton(AF_INET, record.ip, &IP); /* Actually data is IP */
+	//转换由strptr指针所指的字符串，并通过addrptr指针存放二进制结果。
+	//若成功则返回1, 否则如果对所指定的family而言输入的字符串不是有效的表达式，那么值为0。
+	memcpy(answer + curLen, &IP, sizeof(unsigned long));
+	curLen += sizeof(unsigned long);
+	curLen += length;
+	memcpy(sendbuf + length, answer, sizeof(answer));
+
+	return length = sendto(local_sock, sendbuf, curLen, 0, (SOCKADDR*)&localAddr, sizeof(localAddr)); /* Send the packet to client */
+}
 
 
 //if (/*ret为从客户端收到包*/)//为查询请求

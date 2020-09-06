@@ -11,9 +11,13 @@ typedef struct {
 }ID_Binding_Unit;//记录对应ID的结构体
 
 
+extern Cache_Unit Cache[MAX_CACHE_SIZE];//缓存表
 
 void Transfer_URL(char* buf, char* dest);//转换域名至可查询格式
 int If_Expired(ID_Binding_Unit a);//查询转发查询是否超时
 void Set_TTL(int ttl, ID_Binding_Unit* a);//设置转发查询生存时间
 unsigned short Bind_ID(unsigned short ID, SOCKADDR_IN client);//给转发查询绑定新id，并返回其id
 void Transfer_URL(char* buf, char* dest);//将数据包中域名的格式转为正常的点分字符串
+void Clean_cache(Cache_Unit* a);//清空对应缓存单元
+int Add_To_Cache(Record a);//加入到缓存中
+void LFU_Refresh();//LFU算法更新缓存表

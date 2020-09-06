@@ -65,17 +65,22 @@ void Transfer_URL(char* buf, char* dest)
 void Clean_cache(Cache_Unit* a) {
 	strcpy_s(a->inf.dn, "nothing");
 	strcpy_s(a->inf.ip, "nothing");//将内容赋为空
+	a->ttl = 0;//ttl置为0
 }
 
 int Add_To_Cache(Record a) {
-	int i;
-	for (i = 0; i < MAX_CACHE_SIZE; i++) {
+	for (int j = 0; j < MAX_CACHE_SIZE; j++) {
+		if (strcmp(Cache[j].inf.dn, a.dn)&&Cache[j].ttl!=0) {
+			return 0;
+		}//发现已经存在一个相同域名且未过期的缓存单元，则直接丢弃
+	}
+	for (int i = 0; i < MAX_CACHE_SIZE; i++) {
 		if (Cache[i].ttl == 0) {
 			strcpy_s(Cache[i].inf.dn, a.dn);
 			strcpy_s(Cache[i].inf.ip, a.ip);
 			Cache[i].ttl = TTL;//把对应单元生存期赋值为TTL
+			return 1;
 		}
-		return 1;
 	}
 	return 0;
 }//将一次查询结果放入cache，返回值代表是否成功，1为成功，0为失败
