@@ -141,7 +141,6 @@
   <ItemGroup>
     <ClCompile Include="init.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="print.cpp" />
     <ClCompile Include="query.cpp" />
     <ClCompile Include="recv.cpp" />
     <ClCompile Include="data.cpp" />
@@ -150,6 +149,7 @@
     <ClInclude Include="def.h" />
     <ClInclude Include="init.h" />
     <ClInclude Include="data.h" />
+    <ClInclude Include="print.h" />
     <ClInclude Include="recv.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
