@@ -40,7 +40,7 @@ unsigned short Bind_ID(unsigned short ID, SOCKADDR_IN client)/*°ó¶¨Ò»¸öID°ó¶¨µ¥Î
 	if (debug_level == 2) {
 		printf("°ó¶¨IDÊ§°Ü\n");
 	}
-	return -1;
+	return 404;
 }
 
 void Transfer_URL(char* buf, char* dest)

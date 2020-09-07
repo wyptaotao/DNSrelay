@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <winsock2.h>
 #include "def.h"
+#pragma warning(disable:4996)
+
 #pragma comment (lib, "ws2_32.lib")  //加载 ws2_32.dll
 #define BUF_SIZE 100
 extern char ip[2000][20];
@@ -10,6 +12,7 @@ extern sockaddr_in localAddr;
 extern AllRecords r;
 //extern SOCKADDR clntAddr;
 extern int count;
+extern char DNS_Server_IP[16];
 void pre_print()
 {
     printf("****************************************************************\n");
@@ -48,6 +51,12 @@ void init_sock()
         printf("bind socker port failed.");
         exit(1);//强制退出程序
     }
+    extern_sock = socket(AF_INET, SOCK_DGRAM, 0);
+    int non_block = 1;
+    ioctlsocket(extern_sock, FIONBIO, (u_long FAR*) & non_block);
+    extern_id.sin_family = AF_INET;                         /* Set the family as AF_INET (TCP/IP) */
+    extern_id.sin_addr.s_addr = inet_addr(DNS_Server_IP);   /* Set to the IP of extern DNS server */
+    extern_id.sin_port = htons(DNS_PORT);                   /* Set the port as DNS port (53) */
 }
 
 int init_data()

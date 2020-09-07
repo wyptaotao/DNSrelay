@@ -1,11 +1,13 @@
-#include<iostream>
+#include <iostream>
 #include <winsock2.h>
 #include <string.h>
 #include <WS2tcpip.h>
-#include<time.h>
+#include <time.h>
 #include "def.h"
 #include "data.h"
 #include "print.h"
+#include "recv.h"
+#pragma warning(disable:4996)
 
 extern char DNS_Server_IP[16];
 extern SOCKET local_sock;
@@ -14,57 +16,31 @@ extern int debug_level;
 extern sockaddr_in localAddr;
 extern int count;
 extern AllRecords r;
+int length_add = sizeof(localAddr);
+extern sockaddr_in extern_id;
+extern sockaddr_in external;
+int length_c = sizeof(external);
+extern SOCKET extern_sock;
 
 char buffer[MAX_BUF_SIZE] = { 0 };
 int nSize = sizeof(SOCKADDR);
 int length;
 char sendbuf[MAX_BUF_SIZE];
-int query()
+
+
+void Output_Packet(char* buf, int length)
 {
-	
-	//printf("the strLen is : %d\n", length);
-	//for (int i = 0; i < length; i++)
-	//{
-	//	printf("@@@@@@@@@ %c @@@@@@@@@@@@@\n", buffer[i]);//加点注释
-	//}
-	//printf("\n@@@@     end      @@@@\n");
-	length = recvfrom(local_sock, buffer, sizeof(buffer), 0, (struct sockaddr*)&localAddr, &nSize);
-	char url[512] = { 0 };
-	char ori_url[512] = { 0 };		 /* Original url */
-	memcpy(ori_url, &(buffer[DNS_HEARDER_SIZE]), length); /* Get original url from packet */
-	Transfer_URL(ori_url, url);		 /* Convert original url to normal url */
-	if (debug_level)
+	unsigned char unit;
+	printf("Packet length = %d\n", length);
+	printf("Details of the package:\n");
+	for (int i = 0; i < length; i++)
 	{
-		//将IP地址从二进制转成表达格式
-		char str[20] = { 0 };
-		printf("\n\n---- Recv : Client [IP:%s]----\n", inet_ntop(AF_INET, &localAddr.sin_addr, str, INET_ADDRSTRLEN));
-
-		/* Output time now */
-		print_time();
-
-		printf("Receive from client [Query : %s]\n", url);
+		unit = (unsigned char)buf[i];
+		printf("%02x ", unit);
 	}
-
-	//先在cache里找
-	for (int i = 0; i < MAX_CACHE_SIZE; i++) {
-		if (strcmp(url, Cache[i].inf.dn))/*匹配cache里的域名*/ {
-			send_to_client(Cache[i].inf);
-			Cache[i].ttl = TTL + 1;
-			LFU_Refresh();//刷新cache
-		}
-	}
-
-	for (int i = 0; i < r.count; i++)
-	{
-		if (strcmp(url, r.record[i].dn) == 0)//找到,回送给本地
-		{
-			send_to_client(r.record[i]);
-			Add_To_Cache(r.record[i]);//加入缓存
-		}
-	}
-
-	return 0;
+	printf("\n");
 }
+
 int send_to_client(Record record) {
 	char sendbuf[MAX_BUF_SIZE];
 	memcpy(sendbuf, buffer, length); /* Copy the request packet */
@@ -110,26 +86,202 @@ int send_to_client(Record record) {
 }
 
 
-//if (/*ret为从客户端收到包*/)//为查询请求
-//{
-//	//先从本地程序里开始查
-//	if (/*从本地程序里查到*/)
-//	{
-//		//记得判断查到的IP地址是不是0.0.0.0
-//		//sento();回发给客户端
-//	}
-//	else///*从本地程序里没查到*/
-//	{
-//		//绑定ID绑定单元
-//		//根据绑定后的返回的ID，修改包的内容（修改id等啥的）
-//		//发送给实际的DNS服务器
-//	}
-//}
+int query()
+{
+	length = recvfrom(local_sock, buffer, sizeof(buffer), 0, (struct sockaddr*)&localAddr, &nSize);
+	char url[512] = { 0 };
+	char ori_url[512] = { 0 };		 /* Original url */
+	memcpy(ori_url, &(buffer[DNS_HEADER_SIZE]), length); /* Get original url from packet */
+	Transfer_URL(ori_url, url);		 /* Convert original url to normal url */
+	if (debug_level)
+	{
+		//将IP地址从二进制转成表达格式
+		char str[20] = { 0 };
+		printf("\n\n---- Recv : Client [IP:%s]----\n", inet_ntop(AF_INET, &localAddr.sin_addr, str, INET_ADDRSTRLEN));
 
-//if (/*ret为从实际的服务器端收到的包*/)//为中继的回答
-//{
+		/* Output time now */
+		print_time();
 
-//	//判断收到包里的域名和要查询的是否相同，不同则丢弃包，相同则继续
-//	//一些操作：找到旧ID啥的构造好回送包
-//	//回送给客户端
-//}
+		printf("Receive from client [Query : %s]\n", url);
+	}
+
+	//先在cache里找
+	for (int i = 0; i < MAX_CACHE_SIZE; i++) {
+		if (strcmp(url, Cache[i].inf.dn) == 0)/*匹配cache里的域名*/ {
+			send_to_client(Cache[i].inf);
+			return 1;
+		}
+	}
+	/*还没写*/
+
+	for (int i = 0; i < r.count; i++)
+	{
+		if (strcmp(url, r.record[i].dn) == 0)//找到,回送给本地
+		{
+			send_to_client(r.record[i]);
+			return 2;
+		}
+
+
+	}
+
+
+
+	//在DNS服务器中寻找
+	if (length > 0) {
+		char buf[MAX_BUF_SIZE];
+		memset(buf, 0, sizeof(buf));
+		memcpy(buf, buffer, MAX_BUF_SIZE);
+		debug_level = 1;
+		if (debug_level)
+		{
+			printf("\n\nReceive from client [IP:%s]\n", inet_ntoa(localAddr.sin_addr));
+
+			/* Output time now */
+			time_t t = time(NULL);
+			char temp[64];
+			strftime(temp, sizeof(temp), "%Y/%m/%d %X %A", localtime(&t));
+			printf("|%s|\n", temp);
+
+			printf("Receive from client [Query :  ");
+			color(4);
+			printf(" %s", url);
+			color(16);
+			printf("]\n");
+		}
+
+		printf("[Url : %s] not in local data and cache\n", url);
+		unsigned short* pID = (unsigned short*)malloc(sizeof(unsigned short));
+		memcpy(pID, buf, sizeof(unsigned short));//记录下当前包id
+		unsigned short nID = Bind_ID(*pID, client_s);//绑定转发查询
+		if (nID == 404)
+		{
+			if (debug_level >= 1)
+				printf("ID Register failed. The ID transfer table is already full.\n");
+		}
+		else
+		{
+			//发送给外部
+			memcpy(buf, &nID, sizeof(unsigned short));
+			int length_s = sendto(extern_sock, buf, length, 0, (struct sockaddr*)&extern_id, sizeof(extern_id));//发送给DNS服务器
+			if (debug_level >= 1) {
+				printf("Send to external DNS server [Url : ");
+				color(2);
+				printf(" %s", url);
+				color(16);
+				printf("]\n");
+				printf("ID numbrer:%d\n", nID);
+			}
+		}
+		free(pID);
+	}//czk代码结束
+	//从外部接收
+
+	char recvBuf[MAX_BUF_SIZE];
+	memset(recvBuf, 0, MAX_BUF_SIZE);
+	int recvlen = -1;
+	recvlen = recvfrom(extern_sock, recvBuf, sizeof(recvBuf), 0, (struct sockaddr*)&external, &length_c); /* Receive DNS packet from exterior */
+	if (recvlen > -1)
+	{
+		if (debug_level)
+		{
+			printf("\n\n----从外部DNS接收的[IP:%s]----\n", inet_ntoa(external.sin_addr));
+
+			/* Output time now */
+			time_t t = time(NULL);
+			char temp[64];
+			strftime(temp, sizeof(temp), "%Y/%m/%d %X %A", localtime(&t));
+			printf("%s\n", temp);
+
+			if (debug_level == 2)
+				Output_Packet(recvBuf, recvlen);
+		}
+		unsigned short* pID = (unsigned short*)malloc(sizeof(unsigned short));
+		memcpy(pID, recvBuf, sizeof(unsigned short));
+		int id_index = (*pID) - 1;
+		free(pID);
+
+		memcpy(recvBuf, &ID_Table[id_index].prev_ID, sizeof(unsigned short));
+		if (debug_level >= 1) { ; }
+		//printf("#ID Count : %d\n", ID_Count);
+		ID_Table[id_index].status = TRUE;
+
+		//客户端信息
+		sockaddr_in client_back = ID_Table[id_index].client;
+
+		//问题和回答的数量
+		int nquery = ntohs(*((unsigned short*)(recvBuf + 4))), nresponse = ntohs(*((unsigned short*)(recvBuf + 6)));
+		char* p = recvBuf + 12; /* p point to the Quetion field */
+		char ip[16];
+		int ip1, ip2, ip3, ip4;
+
+		char new_url[200];
+		/* Read urls from queries, but only record last url */
+		for (int i = 0; i < nquery; i++)
+		{
+			Transfer_URL(p, new_url);
+			while (*p > 0)
+				p += (*p) + 1;
+			p += 5; /* Point to the next query */
+		}
+
+		if (nresponse > 0 && debug_level >= 1)
+			printf("外部DNS服务器返回信息 [Url : %s]\n", new_url);
+
+		//分析包
+		for (int i = 0; i < nresponse; ++i)
+		{
+			if ((unsigned char)*p == 0xc0) /* The name field is pointer */
+				p += 2;
+			else /* The name field is Url */
+			{
+				while (*p > 0)
+					p += (*p) + 1;
+				++p;
+			}
+			unsigned short resp_type = ntohs(*(unsigned short*)p);  /* Type */
+			p += 2;
+			unsigned short resp_class = ntohs(*(unsigned short*)p); /* Class */
+			p += 2;
+			unsigned short high = ntohs(*(unsigned short*)p); /* TTL high bit */
+			p += 2;
+			unsigned short low = ntohs(*(unsigned short*)p);  /* TTL low bit */
+			p += 2;
+			int ttl = (((int)high) << 16) | low;    /* TTL combinate */
+			int datalen = ntohs(*(unsigned short*)p);  /* Data length */
+			p += 2;
+			if (debug_level >= 2)
+				printf("Type -> %d,  Class -> %d,  TTL -> %d\n", resp_type, resp_class, ttl);
+
+			if (resp_type == 1) /* Type A, the response is IPv4 address */
+			{
+				ip1 = (unsigned char)*p++;
+				ip2 = (unsigned char)*p++;
+				ip3 = (unsigned char)*p++;
+				ip4 = (unsigned char)*p++;
+
+				sprintf(ip, "%d.%d.%d.%d", ip1, ip2, ip3, ip4);
+				if (debug_level)
+					printf("IP address : %d.%d.%d.%d\n", ip1, ip2, ip3, ip4);
+
+				/* Add record to cache */
+				//在这里写向cache中加入数据
+				break;
+			}
+			else p += datalen;  /* If type is not A, then ignore it */
+		}
+
+		/* Send packet to client */
+		length = sendto(local_sock, recvBuf, length, 0, (SOCKADDR*)&localAddr, sizeof(localAddr));
+	}
+	else {
+		printf("未收到！！！\n");
+	}
+
+
+	return 3;
+}
+
+
+
+

@@ -30,6 +30,9 @@
     <ClCompile Include="query.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="print.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="def.h">
