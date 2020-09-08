@@ -71,7 +71,7 @@ int Add_To_Cache(Record a) {
 			strcpy_s(Cache[i].ip[Cache[i].ip_count], a.ip);
 			Cache[i].ip_count++;
 			Cache[i].ttl = CACHE_TTL;//把对应单元生存期赋值为TTL
-			//std::cout << "成功加入已有域名：" << Cache[i].dn << std::endl;
+			std::cout << "成功加入已有域名：" << Cache[i].dn << std::endl;
 			return 1;
 		}
 	}
@@ -81,7 +81,7 @@ int Add_To_Cache(Record a) {
 			strcpy_s(Cache[i].ip[Cache[i].ip_count], a.ip);
 			Cache[i].ip_count++;
 			Cache[i].ttl = CACHE_TTL;//把对应单元生存期赋值为TTL
-			//std::cout << "成功加入未有域名：" << Cache[i].dn << std::endl;
+			std::cout << "成功加入未有域名：" << Cache[i].dn << std::endl;
 			return 1;
 		}
 

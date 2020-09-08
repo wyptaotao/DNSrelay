@@ -56,6 +56,7 @@ int send_cache_to_client(Cache_Unit cache_unit) {
 	int curLen = 0;
 	char answer[100]; memset(answer, 0, sizeof(answer));
 	for (int i = 0; i < cache_unit.ip_count; i++) {
+		std::cout << "放入第" << i + 1 << "条ip，共有"<< cache_unit.ip_count <<"条ip，当前ip为"<<cache_unit.ip<< std::endl;
 		unsigned short Name = htons(0xc00c);  /* Pointer of domain */
 		memcpy(answer, &Name, sizeof(unsigned short));
 		curLen += sizeof(unsigned short);
@@ -137,7 +138,7 @@ int send_to_client(Record record) {
 
 int query()
 {
-	debug_level = 0;
+	debug_level = 2;
 
 	timeval tv = { 1 ,0 };
 	setsockopt(local_sock, SOL_SOCKET, SO_SNDTIMEO, (char*)&tv, sizeof(timeval));
@@ -328,26 +329,28 @@ int query()
 			if (debug_level >= 2)
 				printf("Type -> %d,  Class -> %d,  TTL -> %d\n", resp_type, resp_class, ttl);
 
-			if (resp_type == 1) /* Type A, the response is IPv4 address */
+			if (resp_type != 28)
 			{
-				ip1 = (unsigned char)*p++;
-				ip2 = (unsigned char)*p++;
-				ip3 = (unsigned char)*p++;
-				ip4 = (unsigned char)*p++;
 
-				sprintf(ip, "%d.%d.%d.%d", ip1, ip2, ip3, ip4);
-				if (debug_level)
-					printf("IP address : %d.%d.%d.%d\n", ip1, ip2, ip3, ip4);
-
-				/* Add record to cache */
-				Record aaa;
-				strcpy(aaa.dn, new_url);
-				strcpy(aaa.ip, ip);
-				Add_To_Cache(aaa);
-				//在这里写向cache中加入数据
-				break;
-			}
-			else p += datalen;  /* If type is not A, then ignore it */
+					Record aaa;
+					strcpy(aaa.dn, new_url);
+					std::cout << "ip_count:" << nresponse << std::endl;
+					ip1 = (unsigned char)*p++;
+					ip2 = (unsigned char)*p++;
+					ip3 = (unsigned char)*p++;
+					ip4 = (unsigned char)*p++;
+					sprintf(ip, "%d.%d.%d.%d", ip1, ip2, ip3, ip4);
+					if (debug_level)
+						printf("IP address : %d.%d.%d.%d\n", ip1, ip2, ip3, ip4);
+					strcpy(aaa.ip, ip);
+					std::cout << "加cache第i次:" << i << std::endl;
+					if (!strcmp(ip, "0.0.0.0")) {
+						break;
+					}
+					Add_To_Cache(aaa);
+					std::cout << "成功在cache中加入域名：" << new_url << " IP：" << ip<<std::endl;
+			}//向cache中加入数据
+					//p += datalen;  /* If type is not A, then ignore it */
 		}
 
 		/* Send packet to client */
