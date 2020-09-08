@@ -19,4 +19,6 @@ void Transfer_URL(char* buf, char* dest);//转换域名至可查询格式
 int If_Expired(ID_Binding_Unit a);//查询转发查询是否超时
 void Set_TTL(int ttl, ID_Binding_Unit* a);//设置转发查询生存时间
 unsigned short Bind_ID(unsigned short ID, SOCKADDR_IN client);//给转发查询绑定新id，并返回其id
-void Transfer_URL(char* buf, char* dest);//将数据包中域名的格式转为正常的点分字符串
+int Add_To_Cache(Record a);
+void Clean_cache(Cache_Unit* a);
+void LFU_Refresh();

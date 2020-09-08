@@ -40,7 +40,56 @@ void Output_Packet(char* buf, int length)
 	}
 	printf("\n");
 }
+unsigned short d_to_h(int dec) {
+	return (unsigned short)dec;
+}
+int send_cache_to_client(Cache_Unit cache_unit) {
+	char sendbuf[MAX_BUF_SIZE];
+	memcpy(sendbuf, buffer, length); /* Copy the request packet */
+	unsigned short a = htons(0x8180);
+	memcpy(&sendbuf[2], &a, sizeof(unsigned short)); /* Set the flags of Head */
+	if (strcmp(cache_unit.ip[0], "0.0.0.0") == 0)    /* Judge if the Url should be shielded */
+		a = htons(0x0000);	/* Shielding function : set the number of answer to 0 */
+	else
+		a = htons(0x0000 | d_to_h(cache_unit.ip_count));
+	memcpy(&sendbuf[6], &a, sizeof(unsigned short));
+	int curLen = 0;
+	char answer[100]; memset(answer, 0, sizeof(answer));
+	for (int i = 0; i < cache_unit.ip_count; i++) {
+		unsigned short Name = htons(0xc00c);  /* Pointer of domain */
+		memcpy(answer, &Name, sizeof(unsigned short));
+		curLen += sizeof(unsigned short);
 
+		unsigned short TypeA = htons(0x0001);  /* Type */
+		memcpy(answer + curLen, &TypeA, sizeof(unsigned short));
+		curLen += sizeof(unsigned short);
+
+		unsigned short ClassA = htons(0x0001);  /* Class */
+		memcpy(answer + curLen, &ClassA, sizeof(unsigned short));
+		curLen += sizeof(unsigned short);
+
+		unsigned long timeLive = htonl(0x7b); /* Time to live */
+		memcpy(answer + curLen, &timeLive, sizeof(unsigned long));
+		curLen += sizeof(unsigned long);
+
+		unsigned short IPLen = htons(0x0004);  /* Data length */
+		memcpy(answer + curLen, &IPLen, sizeof(unsigned short));
+		curLen += sizeof(unsigned short);
+
+		unsigned long IP;
+		inet_pton(AF_INET, cache_unit.ip[i], &IP); /* Actually data is IP */
+		//转换由strptr指针所指的字符串，并通过addrptr指针存放二进制结果。
+		//若成功则返回1, 否则如果对所指定的family而言输入的字符串不是有效的表达式，那么值为0。
+		memcpy(answer + curLen, &IP, sizeof(unsigned long));
+		curLen += sizeof(unsigned long);
+	}
+	curLen += length;
+	memcpy(sendbuf + length, answer, sizeof(answer));
+
+
+	return length = sendto(local_sock, sendbuf, curLen, 0, (SOCKADDR*)&localAddr, sizeof(localAddr)); /* Send the packet to client */
+
+}
 int send_to_client(Record record) {
 	char sendbuf[MAX_BUF_SIZE];
 	memcpy(sendbuf, buffer, length); /* Copy the request packet */
@@ -88,72 +137,86 @@ int send_to_client(Record record) {
 
 int query()
 {
+	debug_level = 0;
+
+	timeval tv = { 1 ,0 };
+	setsockopt(local_sock, SOL_SOCKET, SO_SNDTIMEO, (char*)&tv, sizeof(timeval));
+
 	length = recvfrom(local_sock, buffer, sizeof(buffer), 0, (struct sockaddr*)&localAddr, &nSize);
-	char url[512] = { 0 };
-	char ori_url[512] = { 0 };		 /* Original url */
-	memcpy(ori_url, &(buffer[DNS_HEADER_SIZE]), length); /* Get original url from packet */
-	Transfer_URL(ori_url, url);		 /* Convert original url to normal url */
-	if (debug_level)
-	{
-		//将IP地址从二进制转成表达格式
-		char str[20] = { 0 };
-		printf("\n\n---- Recv : Client [IP:%s]----\n", inet_ntop(AF_INET, &localAddr.sin_addr, str, INET_ADDRSTRLEN));
-
-		/* Output time now */
-		print_time();
-
-		printf("Receive from client [Query : %s]\n", url);
-	}
-
-	//先在cache里找
-	for (int i = 0; i < MAX_CACHE_SIZE; i++) {
-		if (strcmp(url, Cache[i].inf.dn) == 0)/*匹配cache里的域名*/ {
-			send_to_client(Cache[i].inf);
-			return 1;
-		}
-	}
-	/*还没写*/
-
-	for (int i = 0; i < r.count; i++)
-	{
-		if (strcmp(url, r.record[i].dn) == 0)//找到,回送给本地
-		{
-			send_to_client(r.record[i]);
-			return 2;
-		}
-
-
-	}
-
-
-
-	//在DNS服务器中寻找
 	if (length > 0) {
+		color(9);
+		if (debug_level == 2)printf("当前时间%d\n", time(NULL));
+		char url[512] = { 0 };
+		char ori_url[512] = { 0 };		 /* Original url */
+		memcpy(ori_url, &(buffer[DNS_HEADER_SIZE]), length); /* Get original url from packet */
+		Transfer_URL(ori_url, url);		 /* Convert original url to normal url */
+		if (debug_level)
+		{
+			//将IP地址从二进制转成表达格式
+			char str[20] = { 0 };
+			printf("\n\n----从客户端接收 [IP:%s]----\n", inet_ntop(AF_INET, &localAddr.sin_addr, str, INET_ADDRSTRLEN));
+
+			/* Output time now */
+
+			printf("从客户端接收 [Query : %s]\n", url);
+		}
+
+		//先在cache里找
+		for (int i = 0; i < MAX_CACHE_SIZE; i++) {
+			if (debug_level == 2)std::cout << "当前cache域名：" << Cache[i].dn << std::endl;
+			if (strcmp(url, Cache[i].dn) == 0)/*匹配cache里的域名*/ {
+				Cache[i].ttl = CACHE_TTL + 1;
+				LFU_Refresh();
+				send_cache_to_client(Cache[i]);
+				if (debug_level)printf("在cache中成功找到，发给本地！\n");
+				return 1;
+			}
+		}
+		if (debug_level == 2)printf("找完缓存，当前时间%d\n", time(NULL));
+
+		for (int i = 0; i < r.count; i++)
+		{
+			if (strcmp(url, r.record[i].dn) == 0)//找到,回送给本地
+			{
+				if (debug_level == 2)printf("发送给本地前，当前时间%d\n", time(NULL));
+
+				send_to_client(r.record[i]);
+				if (debug_level == 2)printf("发送给本地后，当前时间%d\n", time(NULL));
+				if (debug_level)printf("在本地文件中成功找到，发给本地！\n");
+
+				return 2;
+			}
+
+
+		}
+
+
+
+		//在DNS服务器中寻找
+		if (debug_level == 2)printf("开始在dns服务器查询，当前时间%d\n", time(NULL));
+
 		char buf[MAX_BUF_SIZE];
 		memset(buf, 0, sizeof(buf));
 		memcpy(buf, buffer, MAX_BUF_SIZE);
-		debug_level = 1;
 		if (debug_level)
 		{
-			printf("\n\nReceive from client [IP:%s]\n", inet_ntoa(localAddr.sin_addr));
-
-			/* Output time now */
 			time_t t = time(NULL);
 			char temp[64];
 			strftime(temp, sizeof(temp), "%Y/%m/%d %X %A", localtime(&t));
 			printf("|%s|\n", temp);
 
-			printf("Receive from client [Query :  ");
-			color(4);
+			printf("从客户端收到包 [Query :  ");
+			color(12);
 			printf(" %s", url);
-			color(16);
+			color(9);
 			printf("]\n");
 		}
 
-		printf("[Url : %s] not in local data and cache\n", url);
+		printf("[Url : %s] cache和本地文件中都没有\n", url);
 		unsigned short* pID = (unsigned short*)malloc(sizeof(unsigned short));
 		memcpy(pID, buf, sizeof(unsigned short));//记录下当前包id
 		unsigned short nID = Bind_ID(*pID, client_s);//绑定转发查询
+		if (debug_level == 2)printf("PID为：%d", *pID);
 		if (nID == 404)
 		{
 			if (debug_level >= 1)
@@ -162,29 +225,45 @@ int query()
 		else
 		{
 			//发送给外部
+				//if (debug_level == 2)printf("准备发送给外部，当前时间%d\n", time(NULL));
+
 			memcpy(buf, &nID, sizeof(unsigned short));
-			int length_s = sendto(extern_sock, buf, length, 0, (struct sockaddr*)&extern_id, sizeof(extern_id));//发送给DNS服务器
+			int length_s = -1;
+			length_s = sendto(extern_sock, buf, length, 0, (struct sockaddr*)&extern_id, sizeof(extern_id));//发送给DNS服务器
+			if (debug_level == 2)
+				//printf("给外部发送完，当前时间%d\n", time(NULL));
+
+				if (length_s != -1)printf("成功发送给DNS服务器\n");
 			if (debug_level >= 1) {
 				printf("Send to external DNS server [Url : ");
 				color(2);
 				printf(" %s", url);
-				color(16);
+				color(9);
 				printf("]\n");
 				printf("ID numbrer:%d\n", nID);
 			}
 		}
 		free(pID);
+		color(16);
 	}//czk代码结束
 	//从外部接收
 
 	char recvBuf[MAX_BUF_SIZE];
 	memset(recvBuf, 0, MAX_BUF_SIZE);
 	int recvlen = -1;
+	//if (debug_level == 2)printf("准备从外部接受：当前时间%d\n", time(NULL));
+
+	setsockopt(extern_sock, SOL_SOCKET, SO_RCVTIMEO, (char*)&tv, sizeof(timeval));
+
 	recvlen = recvfrom(extern_sock, recvBuf, sizeof(recvBuf), 0, (struct sockaddr*)&external, &length_c); /* Receive DNS packet from exterior */
+	Record now;
+	strcpy(now.ip, inet_ntoa(external.sin_addr));
+	//if (debug_level == 2)printf("从外部接受完：当前时间%d\n", time(NULL));
 	if (recvlen > -1)
 	{
 		if (debug_level)
 		{
+			color(6);
 			printf("\n\n----从外部DNS接收的[IP:%s]----\n", inet_ntoa(external.sin_addr));
 
 			/* Output time now */
@@ -193,17 +272,13 @@ int query()
 			strftime(temp, sizeof(temp), "%Y/%m/%d %X %A", localtime(&t));
 			printf("%s\n", temp);
 
-			if (debug_level == 2)
-				Output_Packet(recvBuf, recvlen);
+			if (debug_level == 2) { Output_Packet(recvBuf, recvlen); }
 		}
 		unsigned short* pID = (unsigned short*)malloc(sizeof(unsigned short));
 		memcpy(pID, recvBuf, sizeof(unsigned short));
-		int id_index = (*pID) - 1;
+		int id_index = (*pID);
 		free(pID);
-
 		memcpy(recvBuf, &ID_Table[id_index].prev_ID, sizeof(unsigned short));
-		if (debug_level >= 1) { ; }
-		//printf("#ID Count : %d\n", ID_Count);
 		ID_Table[id_index].status = TRUE;
 
 		//客户端信息
@@ -265,6 +340,10 @@ int query()
 					printf("IP address : %d.%d.%d.%d\n", ip1, ip2, ip3, ip4);
 
 				/* Add record to cache */
+				Record aaa;
+				strcpy(aaa.dn, new_url);
+				strcpy(aaa.ip, ip);
+				Add_To_Cache(aaa);
 				//在这里写向cache中加入数据
 				break;
 			}
@@ -272,10 +351,16 @@ int query()
 		}
 
 		/* Send packet to client */
-		length = sendto(local_sock, recvBuf, length, 0, (SOCKADDR*)&localAddr, sizeof(localAddr));
+		int lensss = -1;
+		lensss = sendto(local_sock, recvBuf, recvlen, 0, (SOCKADDR*)&localAddr, sizeof(localAddr));
+		if (debug_level) { if (lensss != -1)printf("成功发送！长度为%d\n", recvlen); }
+
+		color(16);
 	}
 	else {
-		printf("未收到！！！\n");
+		color(4);
+		printf("\n未收到外部包！！！\nrecvlen=%d\n", recvlen);
+		color(16);
 	}
 
 

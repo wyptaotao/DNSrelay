@@ -13,6 +13,7 @@ extern AllRecords r;
 //extern SOCKADDR clntAddr;
 extern int count;
 extern char DNS_Server_IP[16];
+extern char file_open[30];
 void pre_print()
 {
     printf("****************************************************************\n");
@@ -44,16 +45,14 @@ void init_sock()
 
     if (bind(local_sock, (SOCKADDR*)&localAddr, sizeof(SOCKADDR)) == 0)//bind()函数通过给一个未命名套接口分配一个本地名字来为套接口建立本地捆绑（主机地址/端口号）。
     {
-        printf("bind socket port successfully.");
+        printf("端口绑定成功\n");
     }
     else
     {
-        printf("bind socker port failed.");
+        printf("端口绑定失败\n");
         exit(1);//强制退出程序
     }
     extern_sock = socket(AF_INET, SOCK_DGRAM, 0);
-    int non_block = 1;
-    ioctlsocket(extern_sock, FIONBIO, (u_long FAR*) & non_block);
     extern_id.sin_family = AF_INET;                         /* Set the family as AF_INET (TCP/IP) */
     extern_id.sin_addr.s_addr = inet_addr(DNS_Server_IP);   /* Set to the IP of extern DNS server */
     extern_id.sin_port = htons(DNS_PORT);                   /* Set the port as DNS port (53) */
@@ -64,21 +63,27 @@ int init_data()
     int i = 0;
     FILE* fp; // 文件指针
     errno_t err;
-    err = fopen_s(&fp, "dnsrelay.txt", "r"); // 打开文件
+    //加一点代码
+    if (debug_level != 1) {
+        strcpy(file_open, "dnsrelay.txt");
+    }
+    //
+    err = fopen_s(&fp, file_open, "r"); // 打开文件
     if (err != 0)
     {
-        printf("The file hasn't been opened.");
+        printf("文件打开失败!");
         exit(1);
     }
     while (!feof(fp)) {
         fscanf_s(fp, "%s %s", r.record[i].ip, _countof(r.record[i].ip), r.record[i].dn, _countof(r.record[i].dn));
-        printf("ip:%s domain name:%s\n", r.record[i].ip, r.record[i].dn);
+        printf("IP是:%s 对应域名:%s\n", r.record[i].ip, r.record[i].dn);
         i++;
     }
     r.count = i;
-    printf("total record number:%d\n", r.count);
+    printf("总记录数:%d\n", r.count);
     fclose(fp); // 关闭文件指针
 }
+
 
 //int main()
 //{

@@ -4,18 +4,13 @@
 #include<time.h>
 #include"def.h"
 #include"data.h"
+#include <iostream>
 
-extern int  debug_level;
-extern ID_Binding_Unit ID_Table[MAX_ID_TABLE_SIZE];//ID¶ÔÓ¦°ó¶¨±í
-extern Cache_Unit Cache[MAX_CACHE_SIZE];//»º´æ±í
-
-void Set_TTL(int ttl, ID_Binding_Unit* a)/*Îª°ó¶¨µ¥Î»ÉèÖÃ³¬Ê±Ê±¼ä*/
-{
+void Set_TTL(int ttl, ID_Binding_Unit* a)/*Îª°ó¶¨µ¥Î»ÉèÖÃ³¬Ê±Ê±¼ä*/ {
 	a->dead_time = time(NULL) + ttl;//ÉèÖÃ³¬Ê±Ê±¼äÎªµ±Ç°Ê±¼ä¼ÓÉÏÉú´æÆÚ
 }
 
-int If_Expired(ID_Binding_Unit a)/*¼ì²éµ±Ç°°ó¶¨µ¥Î»ÊÇ·ñ³¬¹ý¹æ¶¨Ê±¼ä*/
-{
+int If_Expired(ID_Binding_Unit a)/*¼ì²éµ±Ç°°ó¶¨µ¥Î»ÊÇ·ñ³¬¹ý¹æ¶¨Ê±¼ä*/ {
 	if (time(NULL) >= a.dead_time) {
 		return 1;//·µ»Ø1´ú±íÒÑ¾­³¬Ê±
 	}
@@ -25,8 +20,8 @@ int If_Expired(ID_Binding_Unit a)/*¼ì²éµ±Ç°°ó¶¨µ¥Î»ÊÇ·ñ³¬¹ý¹æ¶¨Ê±¼ä*/
 }
 
 unsigned short Bind_ID(unsigned short ID, SOCKADDR_IN client)/*°ó¶¨Ò»¸öID°ó¶¨µ¥Î»£¬·µ»Ø¶ÔÓ¦µÄID*/ {
-	for (int i = 0; i < MAX_ID_TABLE_SIZE; i++) {
-		if (ID_Table[i].status == 1 || If_Expired(ID_Table[i]))/*¸ÃÌõ°ó¶¨µ¥Î»ÒÑ¾­»Ø´«Íê±Ï£¬Ä¿Ç°´¦ÓÚ¿ÕÏÐ×´Ì¬»òÕßÒÑ¾­³¬Ê±*/ {
+	for (int i = 0; i < 16; i++) {
+		if (ID_Table[i].status || If_Expired(ID_Table[i]))/*¸ÃÌõ°ó¶¨µ¥Î»ÒÑ¾­»Ø´«Íê±Ï£¬Ä¿Ç°´¦ÓÚ¿ÕÏÐ×´Ì¬»òÕßÒÑ¾­³¬Ê±*/ {
 			ID_Table[i].client = client;//°ó¶¨¿Í»§¶ËµØÖ·
 			ID_Table[i].prev_ID = ID;//°ó¶¨Ô­À´Êý¾Ý°üID
 			ID_Table[i].status = 0;//½«×´Ì¬ÉèÖÃÎª»¹Î´Íê³É»Ø´«
@@ -43,17 +38,17 @@ unsigned short Bind_ID(unsigned short ID, SOCKADDR_IN client)/*°ó¶¨Ò»¸öID°ó¶¨µ¥Î
 	return 404;
 }
 
-void Transfer_URL(char* buf, char* dest)
+void Transfer_URL(char* asds, char* dest)
 {
-	int i = 0, j = 0, k = 0, len = strlen(buf);
+	int i = 0, j = 0, k = 0, len = strlen(asds);
 	while (i < len)
 	{
-		if (buf[i] > 0 && buf[i] <= 63)//¼ÆÊýÎ»
+		if (asds[i] > 0 && asds[i] <= 63)//¼ÆÊýÎ»
 		{
-			for (j = buf[i], i++; j > 0; j--, i++, k++)
-				dest[k] = buf[i];//ÖðÎ»¸´ÖÆ
+			for (j = asds[i], i++; j > 0; j--, i++, k++)
+				dest[k] = asds[i];//ÖðÎ»¸´ÖÆ
 		}
-		if (buf[i] != 0)
+		if (asds[i] != 0)
 		{
 			dest[k] = '.';
 			k++;
@@ -61,30 +56,38 @@ void Transfer_URL(char* buf, char* dest)
 	}
 	dest[k] = '\0'; //½áÎ²
 }//½«Êý¾Ý°üÖÐÓòÃûµÄ¸ñÊ½×ªÎªÕý³£µÄµã·Ö×Ö·û´®
-
 void Clean_cache(Cache_Unit* a) {
-	strcpy_s(a->inf.dn, "nothing");
-	strcpy_s(a->inf.ip, "nothing");//½«ÄÚÈÝ¸³Îª¿Õ
-	a->ttl = 0;//ttlÖÃÎª0
-}
-
-int Add_To_Cache(Record a) {
-	for (int j = 0; j < MAX_CACHE_SIZE; j++) {
-		if (strcmp(Cache[j].inf.dn, a.dn)&&Cache[j].ttl!=0) {
-			return 0;
-		}//·¢ÏÖÒÑ¾­´æÔÚÒ»¸öÏàÍ¬ÓòÃûÇÒÎ´¹ýÆÚµÄ»º´æµ¥Ôª£¬ÔòÖ±½Ó¶ªÆú
+	strcpy_s(a->dn, "");
+	for (int i = 0; i < a->ip_count; i++) {
+		strcpy_s(a->ip[i], "");//Ñ­»·Çå¿Õ
 	}
-	for (int i = 0; i < MAX_CACHE_SIZE; i++) {
-		if (Cache[i].ttl == 0) {
-			strcpy_s(Cache[i].inf.dn, a.dn);
-			strcpy_s(Cache[i].inf.ip, a.ip);
-			Cache[i].ttl = TTL;//°Ñ¶ÔÓ¦µ¥ÔªÉú´æÆÚ¸³ÖµÎªTTL
+	a->ip_count = 0;
+}//Çå¿Õ»º´æµ¥Ôª
+int Add_To_Cache(Record a) {
+	int i;
+	for (i = 0; i < MAX_CACHE_SIZE; i++) {
+		if (strcmp(a.dn, Cache[i].dn) == 0)/*ÓòÃûÏàÍ¬*/ {
+			strcpy_s(Cache[i].dn, a.dn);
+			strcpy_s(Cache[i].ip[Cache[i].ip_count], a.ip);
+			Cache[i].ip_count++;
+			Cache[i].ttl = CACHE_TTL;//°Ñ¶ÔÓ¦µ¥ÔªÉú´æÆÚ¸³ÖµÎªTTL
+			//std::cout << "³É¹¦¼ÓÈëÒÑÓÐÓòÃû£º" << Cache[i].dn << std::endl;
 			return 1;
 		}
 	}
+	for (i = 0; i < MAX_CACHE_SIZE; i++)/**/ {
+		if (Cache[i].ttl == 0)/*ÉúÃüÖÜÆÚÒÑµ½µÄ*/ {
+			strcpy_s(Cache[i].dn, a.dn);
+			strcpy_s(Cache[i].ip[Cache[i].ip_count], a.ip);
+			Cache[i].ip_count++;
+			Cache[i].ttl = CACHE_TTL;//°Ñ¶ÔÓ¦µ¥ÔªÉú´æÆÚ¸³ÖµÎªTTL
+			//std::cout << "³É¹¦¼ÓÈëÎ´ÓÐÓòÃû£º" << Cache[i].dn << std::endl;
+			return 1;
+		}
+
+	}
 	return 0;
 }//½«Ò»´Î²éÑ¯½á¹û·ÅÈëcache£¬·µ»ØÖµ´ú±íÊÇ·ñ³É¹¦£¬1Îª³É¹¦£¬0ÎªÊ§°Ü
-
 void LFU_Refresh() {
 	for (int i = 0; i < MAX_CACHE_SIZE; i++) {
 		if (Cache[i].ttl != 0) {

@@ -23,26 +23,7 @@ void color(short x)	//自定义函根据参数改变颜色
 		SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 7);
 }
 
-void Process_Parameters(int argc, char* argv[])
-{
-	int user_set_dns_flag = 0;
-	if (argc > 1 && argv[1][0] == '-')
-	{
-		if (argv[1][1] == 'd') debug_level++; /* Debug level add to 1 */
-		if (argv[1][2] == 'd') debug_level++; /* Debug level add to 2 */
-		if (argc > 2)
-		{
-			user_set_dns_flag = 1; /* If user set the dns server ip address */
-			strcpy(DNS_Server_IP, argv[2]);
 
-		}
-	}
-	if (user_set_dns_flag) /* If user set the dns server ip address */
-		printf("Set DNS server : %s\n", argv[2]);
-	else /* If user do not set the dns server ip address, set it by default */
-		printf("Set DNS server : %s by default\n", DNS_Server_IP);
-	printf("Debug level : %d\n", debug_level);
-}
 
 void switch_pack() {
 	char buf[MAX_BUF_SIZE];
