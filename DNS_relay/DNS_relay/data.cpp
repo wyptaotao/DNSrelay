@@ -6,7 +6,7 @@
 #include"data.h"
 #include <iostream>
 
-void Set_TTL(int ttl, ID_Binding_Unit* a)/*Îª°ó¶¨µ¥Î»ÉèÖÃ³¬Ê±Ê±¼ä*/ {
+void Set_TTL(int ttl,ID_Binding_Unit* a)/*Îª°ó¶¨µ¥Î»ÉèÖÃ³¬Ê±Ê±¼ä*/ {
 	a->dead_time = time(NULL) + ttl;//ÉèÖÃ³¬Ê±Ê±¼äÎªµ±Ç°Ê±¼ä¼ÓÉÏÉú´æÆÚ
 }
 
@@ -21,7 +21,7 @@ int If_Expired(ID_Binding_Unit a)/*¼ì²éµ±Ç°°ó¶¨µ¥Î»ÊÇ·ñ³¬¹ý¹æ¶¨Ê±¼ä*/ {
 
 unsigned short Bind_ID(unsigned short ID, SOCKADDR_IN client)/*°ó¶¨Ò»¸öID°ó¶¨µ¥Î»£¬·µ»Ø¶ÔÓ¦µÄID*/ {
 	for (int i = 0; i < 16; i++) {
-		if (ID_Table[i].status || If_Expired(ID_Table[i]))/*¸ÃÌõ°ó¶¨µ¥Î»ÒÑ¾­»Ø´«Íê±Ï£¬Ä¿Ç°´¦ÓÚ¿ÕÏÐ×´Ì¬»òÕßÒÑ¾­³¬Ê±*/ {
+		if (ID_Table[i].status||If_Expired(ID_Table[i]))/*¸ÃÌõ°ó¶¨µ¥Î»ÒÑ¾­»Ø´«Íê±Ï£¬Ä¿Ç°´¦ÓÚ¿ÕÏÐ×´Ì¬»òÕßÒÑ¾­³¬Ê±*/ {
 			ID_Table[i].client = client;//°ó¶¨¿Í»§¶ËµØÖ·
 			ID_Table[i].prev_ID = ID;//°ó¶¨Ô­À´Êý¾Ý°üID
 			ID_Table[i].status = 0;//½«×´Ì¬ÉèÖÃÎª»¹Î´Íê³É»Ø´«
@@ -41,14 +41,14 @@ unsigned short Bind_ID(unsigned short ID, SOCKADDR_IN client)/*°ó¶¨Ò»¸öID°ó¶¨µ¥Î
 void Transfer_URL(char* asds, char* dest)
 {
 	int i = 0, j = 0, k = 0, len = strlen(asds);
-	while (i < len)
+	while (i < len) 
 	{
 		if (asds[i] > 0 && asds[i] <= 63)//¼ÆÊýÎ»
 		{
-			for (j = asds[i], i++; j > 0; j--, i++, k++)
+			for (j = asds[i], i++; j > 0; j--, i++, k++) 
 				dest[k] = asds[i];//ÖðÎ»¸´ÖÆ
 		}
-		if (asds[i] != 0)
+		if (asds[i] != 0) 
 		{
 			dest[k] = '.';
 			k++;
@@ -66,12 +66,12 @@ void Clean_cache(Cache_Unit* a) {
 int Add_To_Cache(Record a) {
 	int i;
 	for (i = 0; i < MAX_CACHE_SIZE; i++) {
-		if (strcmp(a.dn, Cache[i].dn) == 0)/*ÓòÃûÏàÍ¬*/ {
+		if (strcmp(a.dn,Cache[i].dn)==0)/*ÓòÃûÏàÍ¬*/ {
 			strcpy_s(Cache[i].dn, a.dn);
 			strcpy_s(Cache[i].ip[Cache[i].ip_count], a.ip);
 			Cache[i].ip_count++;
 			Cache[i].ttl = CACHE_TTL;//°Ñ¶ÔÓ¦µ¥ÔªÉú´æÆÚ¸³ÖµÎªTTL
-			std::cout << "³É¹¦¼ÓÈëÒÑÓÐÓòÃû£º" << Cache[i].dn << std::endl;
+			//std::cout << "³É¹¦¼ÓÈëÒÑÓÐÓòÃû£º" << Cache[i].dn << std::endl;
 			return 1;
 		}
 	}
@@ -81,7 +81,7 @@ int Add_To_Cache(Record a) {
 			strcpy_s(Cache[i].ip[Cache[i].ip_count], a.ip);
 			Cache[i].ip_count++;
 			Cache[i].ttl = CACHE_TTL;//°Ñ¶ÔÓ¦µ¥ÔªÉú´æÆÚ¸³ÖµÎªTTL
-			std::cout << "³É¹¦¼ÓÈëÎ´ÓÐÓòÃû£º" << Cache[i].dn << std::endl;
+			//std::cout << "³É¹¦¼ÓÈëÎ´ÓÐÓòÃû£º" << Cache[i].dn << std::endl;
 			return 1;
 		}
 
@@ -98,3 +98,32 @@ void LFU_Refresh() {
 		}//Ö»¸üÐÂ·Ç¿Õµ¥Ôª
 	}
 }//LFUËã·¨¸üÐÂ»º´æ
+
+
+int Add_To_Txt(char* ip, char* new_url)
+{	
+	FILE* fp; // ÎÄ¼þÖ¸Õë
+	errno_t err;
+	err = fopen_s(&fp, "dnsrelay.txt", "a+"); // ´ò¿ªÎÄ¼þ
+
+	if (err != 0)
+	{
+		printf("ÎÄ¼þ´ò¿ªÊ§°Ü!");
+		exit(1);
+	}
+	else
+	{
+		fprintf(fp, "%\n");
+		fputs(ip, fp);
+		fputs(" ",fp);
+		fputs(new_url, fp);
+		fclose(fp);
+	}
+	return 0;
+}
+void Add_To_Table(AllRecords *a, char* ip, char* new_url) {
+	strcpy_s(a->record[a->count].dn, new_url);
+	strcpy_s(a->record[a->count].ip, ip);
+	a->count++;
+	return;
+}

@@ -1,11 +1,11 @@
 #pragma once
 const int MAX_BUF_SIZE = 512;		//一个DNS包的最大长度
-const int MAX_ID_TABLE_SIZE = 16; //ID对应表最大容量
+const int MAX_ID_TABLE_SIZE=16; //ID对应表最大容量
 const int TTL = 2;				//生存期最大为两秒
 const int CACHE_TTL = 5;//cache生存周期为五次查询
 const int DNS_HEADER_SIZE = 12; //DNS头字节数
 const int DNS_PORT = 53;//DNS端口
-const int MAX_CACHE_SIZE = 5;//CACHE表容量
+const int MAX_CACHE_SIZE=5;//CACHE表容量
 
 #define BUF_SIZE 1024          /* Max buffer size */
 extern SOCKADDR_IN client_s;
@@ -37,7 +37,7 @@ struct Cache_Unit {
 
 extern int debug_level;
 extern SOCKET local_sock;
-extern SOCKET extern_sock;
+extern SOCKET extern_sock; 
 extern SOCKADDR clntAddr;
 
 int query();

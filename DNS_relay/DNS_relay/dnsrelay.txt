@@ -908,4 +908,12 @@
 74.125.207.132 1.bp.blogspot.com
 74.125.207.132 2.bp.blogspot.com
 74.125.207.132 3.bp.blogspot.com
-74.125.207.132 4.bp.blogspot.com
+52.80.141.81 datayi.cn
+61.135.185.32 sp0.baidu.com
+123.125.132.33 dss1.bdstatic.com
+123.125.132.32 ss1.bdstatic.com
+220.194.87.190 pic.cnblogs.com
+123.125.132.33 dss0.bdstatic.com
+204.79.197.219 edge.microsoft.com
+61.135.169.121 sp1.baidu.com
+123.125.132.33 dss2.bdstatic.com
